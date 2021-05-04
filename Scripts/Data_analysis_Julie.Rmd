@@ -16,7 +16,7 @@ pacman::p_load(tidyverse, jpeg, grid, lme4, lmerTest, DHARMa, MuMIn)
 
 ```{r load data}
 ## We need the guess_max = Inf here, even though this will make the file loading slower
-Fixations <- read_csv("~/Uni stuff/Computational Modeling/Eye-Tracking-Workhop-CogSci-F2021/data/Fixations_final.csv")
+Fixations <- read_csv("~/Uni stuff/Computational Modeling/Eye-Tracking-Workhop-CogSci-F2021/data/Fixations_final.csv", guess_max = Inf)
 Saccades <- read_csv("~/Uni stuff/Computational Modeling/Eye-Tracking-Workhop-CogSci-F2021/data/Saccades_final.csv")
 ```
 
@@ -237,14 +237,25 @@ Fixations <- Fixations %>%
 We can now plot the data. We start by looking at the overall values of pupil size. Do they differ based on conditions (Ostensiveness & Direction)? Let's plot the data first and model them afterwards.
 
 ```{r}
-...
+Fixations_soc <- Fixations %>% 
+  filter(Task == "Social engagement")
+
+
+
+
+Fixations_soc$Ostensiveness <- as.factor(Fixations_soc$Ostensiveness)
+
+ggplot(Fixations_soc, aes(x = PupilSize, color = Ostensiveness))+
+         geom_density()
+
 
 ```
 
 Now model the data. Make sure to include all relevant fixed effects. Make also sure that you account for the fact that different people have different baselines of pupil size.
 
 ```{r}
-mPupil <- ...
+
+mPupil <- glmer(PupilSize ~ 0 + Ostensiveness:Direction + (1|ParticipantID), data = Fixations_soc) 
 
 summary(mPupil)
 ```
@@ -254,14 +265,15 @@ We can then look at how pupil size changes over time. This is a good way to acco
 Plot the data using geom_smooth(method = "gam") in ggplot to see how pupil size changes over time. Remember to only include data from the Social engagement task. Include both Ostensiveness and Direction as variables in the plot. What do we see?
 
 ```{r}
-...
+ggplot(Fixations_soc, aes(x = FixationNo, y = PupilSize, color = Ostensiveness))+
+  geom_smooth(method = "gam")+ facet_wrap(~Direction)
 
 ```
 
 Now model the data to see whether we find a main effect of Ostensiveness and an interaction with Direction. Remember the time factor!
 
-```{r}
-mPupil2 <- ...
+```{r} 
+mPupil2 <- glmer(PupilSize ~ 0 +FixationNo + Ostensiveness*Direction + (1+FixationNo|ParticipantID), data = Fixations_soc)
 
 summary(mPupil2)
 ```
